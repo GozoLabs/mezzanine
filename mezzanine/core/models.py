@@ -1,4 +1,5 @@
 
+from django.contrib.sites.models import Site
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -31,7 +32,7 @@ class SiteRelated(models.Model):
     class Meta:
         abstract = True
 
-    site = models.ForeignKey("sites.Site", editable=False)
+    sites = models.ManyToManyField('sites.Site', related_name='%(app_label)s_%(class)s_related')
 
     def save(self, update_site=False, *args, **kwargs):
         """
@@ -41,6 +42,9 @@ class SiteRelated(models.Model):
         """
         if update_site or not self.id:
             self.site_id = current_site_id()
+            curr_site = Site.objects.filter(id=self.site_id)
+            if curr_site.exists():
+                self.sites.add(curr_site[0])
         super(SiteRelated, self).save(*args, **kwargs)
 
 
